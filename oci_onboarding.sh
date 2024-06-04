@@ -363,7 +363,7 @@ chmod +x $cleanup_file
 
 echo
 echo "----------------------------------------------------------------------------------------------------"
-echo "Information shown below is needed to onboard subscription to the Cisco Multicloud Defense Controller"
+echo "Information shown below is needed to onboard Tennant/Compartment to the Cisco Multicloud Defense Controller"
 echo "----------------------------------------------------------------------------------------------------"
 echo "Tenant/Directory  : $TENANT_ID"
 echo
