@@ -18,7 +18,7 @@ while getopts "hp:w:" optname; do
             usage
             ;;
         p)
-            PREFIX=${OPTARG}
+            PREFIX="${OPTARG}"
             ;;
     esac
 done
@@ -83,10 +83,44 @@ declare -a compartment_names
 TENANT_ID=$(oci iam compartment list --all --compartment-id-in-subtree true --access-level ACCESSIBLE --include-root --raw-output --query "data[?contains(\"id\",'tenancy')].id | [0]")
 USING_ROOT_COMPARTMENT=false
 
-read -p "Do you want to use any existing Compartments (y)  ? [y/n] " -n 1
+read -p "Do you want to enter existing Compartment id (y) or select compartments from a list (n)? [y/n] " -n 1
 
 existing_comp=$REPLY
 if [[ "$REPLY" == "y" || "$REPLY" == "Y" ]]; then
+    while true; do
+    echo 
+    read -p "Please enter the OCI compartment ID: " compartment
+    compartment_info=$(oci iam compartment get --compartment-id "$compartment" 2>&1)
+
+    if [ $? -eq 0 ]; then
+        compartment_name=$(echo "$compartment_info" | jq -r '.data.name')
+        compartment_id=$(echo "$compartment_info" | jq -r '.data.id')
+        echo "Using the Compartment  $compartment_name / $compartment_id"
+
+        # build path for policy 
+        if [[ "$compartment_id" != "$TENANT_ID" ]]; then
+            compartment_names+=($(build_compartment_path "$compartment_id"))
+
+        else
+            USING_ROOT_COMPARTMENT=true
+        fi
+    else
+         # Print the error message from OCI CLI
+        echo "Failed to retrieve compartment information. Error:"
+        echo "$compartment_info"
+        exit 1
+    fi
+
+        # Ask the user if they want to add a compartment
+        read -p "Do you want to add more existing OCI compartments? (Y/N): " answer
+
+        if [[ "$answer" == "n" || "$answer" == "N" || "$answer" == "no" ]]; then
+            # User finished adding compartments, break out of the loop
+            break
+        fi
+    done
+
+else
     echo    
     echo "Getting list of compartments"
     ALL_COMPARTMENTS=$(oci iam compartment list --compartment-id-in-subtree true --all --include-root  --query "data[].{"name":name,"id":id}")
@@ -145,56 +179,56 @@ if [[ "$REPLY" == "y" || "$REPLY" == "Y" ]]; then
 fi
      
 
-read -p "Do you want to create a new compartment ?[y/n] " -n 1
+# read -p "Do you want to create a new compartment ?[y/n] " -n 1
 
-new_comp=$REPLY
-if [[ "$REPLY" == "y" || "$REPLY" == "Y" ]]; then
-    echo
-    echo "Getting list ofcompartments"
-    ALL_COMPARTMENTS=$(oci iam compartment list --compartment-id-in-subtree true --all --include-root --query "data[].{"name":name,"id":id}" )
-    # echo $ALL_COMPARTMENTS
-    declare -A display_name_map
-    declare -A compartment_id_map
+# new_comp=$REPLY
+# if [[ "$REPLY" == "y" || "$REPLY" == "Y" ]]; then
+#     echo
+#     echo "Getting list ofcompartments"
+#     ALL_COMPARTMENTS=$(oci iam compartment list --compartment-id-in-subtree true --all --include-root --query "data[].{"name":name,"id":id}" )
+#     # echo $ALL_COMPARTMENTS
+#     declare -A display_name_map
+#     declare -A compartment_id_map
 
-    index=0
-    while IFS= read -r line; do
-        display_name=$(echo "$line" | jq -r '.name | @sh')
-        compartment_id=$(echo "$line" | jq -r '.id')
+#     index=0
+#     while IFS= read -r line; do
+#         display_name=$(echo "$line" | jq -r '.name | @sh')
+#         compartment_id=$(echo "$line" | jq -r '.id')
 
-        display_name_map[$index]=$display_name
-        compartment_id_map[$index]=$compartment_id
+#         display_name_map[$index]=$display_name
+#         compartment_id_map[$index]=$compartment_id
 
-        ((index++))
-    done < <(echo "$ALL_COMPARTMENTS" | jq -c '.[]')
+#         ((index++))
+#     done < <(echo "$ALL_COMPARTMENTS" | jq -c '.[]')
     
-    length=${#display_name_map[@]}
-    for ((i = 0; i < length; i++)); do
-        display_name="${display_name_map[$i]}"
-        App_id="${compartment_id_map[$i]}"
+#     length=${#display_name_map[@]}
+#     for ((i = 0; i < length; i++)); do
+#         display_name="${display_name_map[$i]}"
+#         App_id="${compartment_id_map[$i]}"
         
-        echo "$i $display_name/ $app_id"
-    done
-    length=$(($length-1))
-    read -p "Enter number from 0 - $length for the root compartment: " compartment_selection
-    if [[ -z $compartment_selection ]]; then
-        read -p "Enter number from 0 - $length for the root compartment: " compartment_selection
-    fi
-    echo 
-    echo "selection $compartment_selection" 
-    echo "Using the Compartment  ${display_name_map[$compartment_selection]} / ${compartment_id_map[$compartment_selection]} as root"
-    echo "creating new compartment " $PREFIX-compartment
-    result=$(oci iam compartment create --name $PREFIX-compartment --description "Created by Cisco Multicloud defence"  --compartment-id ${compartment_id_map[$compartment_selection]} --query "data.{"name":name,"id":id}")
-    echo $result
-    COMPARTMENT_NAME=$(echo $result | jq -r '.name | @sh')
-    COMPARTMENT_ID=$(echo $result | jq -r '.id')
+#         echo "$i $display_name/ $app_id"
+#     done
+#     length=$(($length-1))
+#     read -p "Enter number from 0 - $length for the root compartment: " compartment_selection
+#     if [[ -z $compartment_selection ]]; then
+#         read -p "Enter number from 0 - $length for the root compartment: " compartment_selection
+#     fi
+#     echo 
+#     echo "selection $compartment_selection" 
+#     echo "Using the Compartment  ${display_name_map[$compartment_selection]} / ${compartment_id_map[$compartment_selection]} as root"
+#     echo "creating new compartment " $PREFIX-compartment
+#     result=$(oci iam compartment create --name $PREFIX-compartment --description "Created by Cisco Multicloud defence"  --compartment-id ${compartment_id_map[$compartment_selection]} --query "data.{"name":name,"id":id}")
+#     echo $result
+#     COMPARTMENT_NAME=$(echo $result | jq -r '.name | @sh')
+#     COMPARTMENT_ID=$(echo $result | jq -r '.id')
 
-    echo " waiting for compartment to be Active "
-    sleep 5
-    wait_until_compartment_active $COMPARTMENT_ID
-    #compartment_names+=("$(echo $result | jq -r '.name | @sh' | tr -d "\'")")
-    compartment_names+=($(build_compartment_path $COMPARTMENT_ID))
-    echo created Compartment $COMPARTMENT_ID $COMPARTMENT_NAME
-fi
+#     echo " waiting for compartment to be Active "
+#     sleep 5
+#     wait_until_compartment_active $COMPARTMENT_ID
+#     #compartment_names+=("$(echo $result | jq -r '.name | @sh' | tr -d "\'")")
+#     compartment_names+=($(build_compartment_path $COMPARTMENT_ID))
+#     echo created Compartment $COMPARTMENT_ID $COMPARTMENT_NAME
+# fi
 
 echo 
 echo  "Creating group" $PREFIX-controller-group
@@ -319,14 +353,10 @@ fi
 
 
 cleanup_file="delete-oci-cisco-mcd-setup.sh"
-echo "Created uninstaller script in the current directory '$cleanup_file': Note run script with tennants base region parameter to delete compartment created with this script "
-echo " example : ./'$cleanup_file' us-sanjose-1 "
-
-if [[ "$new_comp" == "n"  || "$new_comp" == "N" ]]; then
+echo "Created uninstaller script in the current directory '$cleanup_file'"
 
 cat > $cleanup_file <<- EOF
-REGION="$1"
-echo Delete api key 
+echo Delete api key with figerprint $api_key_fingerprint
 oci iam user api-key delete --user-id $USER_ID --fingerprint $api_key_fingerprint
 echo Delete user $USER_NAME from group $GROUP_NAME
 oci iam group remove-user --user-id $USER_ID --group-id $GROUP_ID
@@ -340,34 +370,16 @@ rm $cleanup_file
 
 EOF
 
-else
-
-cat > $cleanup_file <<- EOF
-REGION="$1"
-echo Delete api key 
-oci iam user api-key delete --user-id $USER_ID --fingerprint $api_key_fingerprint
-echo Delete user $USER_NAME from group $GROUP_NAME
-oci iam group remove-user --user-id $USER_ID --group-id $GROUP_ID
-echo Delete Iam Policy $POLICY_NAME
-oci iam policy delete --policy-id $POLICY_ID
-echo Delete Group $GROUP_NAME
-oci iam group delete --group-id $GROUP_ID
-echo Delete User $USER_NAME
-oci iam user delete --user-id $USER_ID
-echo Deleteing compartment $COMPARTMENT_NAME 
-oci raw-request --target-uri https://identity.$REGION.oraclecloud.com/20160918/compartments/$COMPARTMENT_ID --http-method DELETE
-EOF
-
-fi
 chmod +x $cleanup_file
 
 echo
 echo "----------------------------------------------------------------------------------------------------"
-echo "Information shown below is needed to onboard Tennant/Compartment to the Cisco Multicloud Defense Controller"
+echo "Information shown below is needed to onboard Tenant/Compartment to the Cisco Multicloud Defense Controller"
 echo "----------------------------------------------------------------------------------------------------"
-echo "Tenant/Directory  : $TENANT_ID"
+echo "Tenancy OCID : $TENANT_ID"
 echo
-echo " User_Id          : $USER_ID"    
+echo "User OCID    : $USER_ID"    
 echo
-echo " Private key      : $PRIVATE_KEY"   
+echo "Private Key  : "   
+echo " $PRIVATE_KEY "
 echo "----------------------------------------------------------------------------------------------------"
