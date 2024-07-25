@@ -280,7 +280,9 @@ extra_policy_statement="\"Allow group $GROUP_NAME to read marketplace-listings i
 \"Allow group $GROUP_NAME to inspect compartments in tenancy\",
 \"Allow group $GROUP_NAME to read virtual-network-family in tenancy\",
 \"Allow group $GROUP_NAME to read instance-family in tenancy\",
-\"Allow group $GROUP_NAME to read load-balancers in tenancy\""
+\"Allow group $GROUP_NAME to read load-balancers in tenancy\",
+\"Allow group $GROUP_NAME to manage cloudevents-rules in tenancy\",
+\"Allow group $GROUP_NAME to manage ons-family in tenancy\""
 
 echo "$extra_policy_statement" >> "$policy_file"
 
