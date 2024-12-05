@@ -302,7 +302,17 @@ echo created Policy  $POLICY_ID $POLICY_NAME
 
 echo "Creating user" $PREFIX-controller-user
 
-result=$(oci iam user create --name $PREFIX-controller-user --description "MultiCloud Defence Controller user" --query "data.{"name":name,"id":id}")
+# Ask if the user wants to enter an email ID
+read -rp "Do you want to enter an email ID for the user? (y/n): " enter_email
+
+if [[ "$enter_email" == "y" || "$enter_email" == "Y" ]]; then
+    # Prompt for email ID
+    read -rp "Enter the email ID for the user: " email_id
+    result=$(oci iam user create --name $PREFIX-controller-user --description "MultiCloud Defence Controller user" --email $email_id --query "data.{"name":name,"id":id}")
+else
+    result=$(oci iam user create --name $PREFIX-controller-user --description "MultiCloud Defence Controller user" --query "data.{"name":name,"id":id}")
+fi
+
 USER_NAME=$(echo $result | jq -r '.name | @sh')
 USER_ID=$(echo $result | jq -r '.id')
 echo created User  $USER_ID $USER_NAME
