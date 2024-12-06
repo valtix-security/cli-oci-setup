@@ -164,9 +164,8 @@ else
             USING_ROOT_COMPARTMENT=true
         fi
 
-        # remove the selected compartmet from the map 
-        unset display_name_map[$compartment_selection]
-        unset compartment_id_map[$compartment_selection]
+        # Prefix the selected compartment's display name with [ALREADY SELECTED]
+        display_name_map[$compartment_selection]="****[ALREADY SELECTED]**** ${display_name_map[$compartment_selection]}"
 
         # Ask the user if they want to add a compartment
         read -p "Do you want to add more existing OCI compartments? (Y/N): " answer
