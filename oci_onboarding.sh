@@ -248,10 +248,10 @@ if [[ "$USING_ROOT_COMPARTMENT" == "true" ]]; then
     root_policy_statement="\"Allow group $GROUP_NAME to inspect instance-images in tenancy\",
 \"Allow group $GROUP_NAME to read app-catalog-listing in tenancy\",
 \"Allow group $GROUP_NAME to use volume-family in tenancy\",
-\"Allow group $GROUP_NAME to use virtual-network-family in tenancy\",
+\"Allow group $GROUP_NAME to manage virtual-network-family in tenancy\",
 \"Allow group $GROUP_NAME to manage volume-attachments in tenancy\",
 \"Allow group $GROUP_NAME to manage instances in tenancy\",
-\"Allow group $GROUP_NAME to {INSTANCE_IMAGE_READ}in tenancy\",
+\"Allow group $GROUP_NAME to {INSTANCE_IMAGE_READ} in tenancy\",
 \"Allow group $GROUP_NAME to manage load-balancers in tenancy\",
 \"Allow group $GROUP_NAME to manage app-catalog-listing in tenancy\","
     echo "$root_policy_statement" >> "$policy_file"
@@ -264,7 +264,7 @@ for COMPARTMENT_NAME in "${compartment_names[@]}"; do
     policy_statement="\"Allow group $GROUP_NAME to inspect instance-images in compartment $COMPARTMENT_NAME\",
 \"Allow group $GROUP_NAME to read app-catalog-listing in compartment $COMPARTMENT_NAME\",
 \"Allow group $GROUP_NAME to use volume-family in compartment $COMPARTMENT_NAME\",
-\"Allow group $GROUP_NAME to use virtual-network-family in compartment $COMPARTMENT_NAME\",
+\"Allow group $GROUP_NAME to manage virtual-network-family in compartment $COMPARTMENT_NAME\",
 \"Allow group $GROUP_NAME to manage volume-attachments in compartment $COMPARTMENT_NAME\",
 \"Allow group $GROUP_NAME to manage instances in compartment $COMPARTMENT_NAME\",
 \"Allow group $GROUP_NAME to {INSTANCE_IMAGE_READ} in compartment $COMPARTMENT_NAME\",
