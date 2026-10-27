@@ -40,11 +40,11 @@ The policy grants **management** permissions (`manage instances`,
 `manage virtual-network-family`, `manage load-balancers`, ...) only in the compartments you
 select, and **read/discovery** permissions (`read virtual-network-family`,
 `read instance-family`, `read load-balancers`, `inspect compartments`) at the tenancy level.
-It also grants `inspect resource-availability in tenancy`, which the controller uses to read
+It also grants `read resource-availability in tenancy`, which the controller uses to read
 OCI service limits (load balancers, cores, VCNs) before creating a gateway.
 
 > **Accounts onboarded before this statement was added:** add
-> `Allow group <prefix>-controller-group to inspect resource-availability in tenancy` to the
+> `Allow group <prefix>-controller-group to read resource-availability in tenancy` to the
 > existing `<prefix>-controller-policy`, in the console or with `oci iam policy update`. Without
 > it, the controller cannot read the limits and leaves them out of its gateway checks.
 
