@@ -317,7 +317,7 @@ POLICY_ID=$(oci iam policy list --compartment-id "$TENANT_ID" --name "$POLICY_NA
 
 if [[ -n "$POLICY_ID" ]]; then
     echo "Policy $POLICY_NAME already exists ($POLICY_ID), updating its statements"
-    if ! result=$(oci iam policy update --policy-id "$POLICY_ID" --statements file:///tmp/policy.txt --force 2>&1); then
+    if ! result=$(oci iam policy update --policy-id "$POLICY_ID" --statements file:///tmp/policy.txt --version-date "" --force 2>&1); then
         echo "Failed to update policy $POLICY_NAME:"
         echo "$result"
         exit 1
